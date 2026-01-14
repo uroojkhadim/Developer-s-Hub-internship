@@ -3,17 +3,24 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Alert, FlatList, Modal, RefreshControl, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Post as PostType } from '../types/post';
 import Post from './Post';
+import CreatePost from './CreatePost';
 import { getPosts, likePost, updatePost as updatePostService, deletePost as deletePostService } from '../services/postService';
 import { useAuth } from '../contexts/AuthContext';
+import { usePosts } from '../contexts/PostContext';
 
 const PostList = () => {
   const [posts, setPosts] = useState<PostType[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { user } = useAuth();
+  const { refreshPosts } = usePosts();
   const [editingPost, setEditingPost] = useState<PostType | null>(null);
   const [editContent, setEditContent] = useState('');
   const [editImageUri, setEditImageUri] = useState<string | null>(null);
+
+  const handlePostCreated = () => {
+    loadPosts(true);
+  };
 
   const loadPosts = useCallback(async (refresh = false) => {
     if ((isLoading || isRefreshing) && !refresh) return;
@@ -123,6 +130,7 @@ const PostList = () => {
       <FlatList
         data={posts}
         keyExtractor={item => item.id}
+        ListHeaderComponent={<CreatePost onPostCreated={handlePostCreated} />}
         renderItem={({ item }) => (
           <Post 
             post={item} 
