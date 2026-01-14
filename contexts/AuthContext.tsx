@@ -10,6 +10,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   forgotPassword: (email: string) => Promise<void>;
   updateProfile: (userData: Partial<User>) => Promise<User | null>;
+  changePassword: (newPassword: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -105,6 +106,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const changePassword = async (newPassword: string) => {
+    try {
+      await authService.changePassword(newPassword);
+    } catch (error) {
+      console.error('Change password error:', error);
+      throw error;
+    }
+  };
+
   const value = {
     user,
     isLoading,
@@ -113,6 +123,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     logout,
     forgotPassword,
     updateProfile,
+    changePassword,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -18,6 +18,7 @@ interface AuthService {
   forgotPassword: (email: string) => Promise<void>;
   getCurrentUser: () => Promise<User | null>;
   updateProfile: (userData: Partial<User>) => Promise<void>;
+  changePassword: (newPassword: string) => Promise<void>;
 }
 
 // Mock auth service implementation
@@ -119,6 +120,11 @@ class MockAuthService implements AuthService {
     // Save to AsyncStorage
     await AsyncStorage.setItem('user', JSON.stringify(this.currentUser));
   }
+
+  async changePassword(newPassword: string): Promise<void> {
+    // Mock no-op
+    console.log('Password would be changed to', newPassword);
+  }
 }
 
 // Firebase auth service implementation
@@ -139,12 +145,14 @@ class FirebaseAuthService implements AuthService {
       await updateProfile(user, { displayName: name });
     }
 
-    // Return user object
-    return {
+    const newUser: User = {
       id: user.uid,
       email: user.email || '',
       name: name || user.displayName || email.split('@')[0],
     };
+    const { saveUserProfile } = await import('./userService');
+    await saveUserProfile(newUser);
+    return newUser;
   }
 
   async login(email: string, password: string): Promise<User | null> {
@@ -159,11 +167,14 @@ class FirebaseAuthService implements AuthService {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    return {
+    const loggedIn: User = {
       id: user.uid,
       email: user.email || '',
       name: user.displayName || email.split('@')[0],
     };
+    const { saveUserProfile } = await import('./userService');
+    await saveUserProfile(loggedIn);
+    return loggedIn;
   }
 
   async logout(): Promise<void> {
@@ -198,11 +209,14 @@ class FirebaseAuthService implements AuthService {
 
     // Check if user is already authenticated with Firebase
     if (auth.currentUser) {
-      return {
+      const current: User = {
         id: auth.currentUser.uid,
         email: auth.currentUser.email || '',
         name: auth.currentUser.displayName || auth.currentUser.email?.split('@')[0] || '',
       };
+      const { saveUserProfile } = await import('./userService');
+      await saveUserProfile(current);
+      return current;
     }
 
     // Fallback to AsyncStorage if Firebase is not initialized
@@ -226,7 +240,18 @@ class FirebaseAuthService implements AuthService {
       await updateProfile(auth.currentUser, {
         displayName: userData.name,
       });
+      const { updateUserProfile } = await import('./userService');
+      await updateUserProfile(auth.currentUser.uid, userData);
     }
+  }
+
+  async changePassword(newPassword: string): Promise<void> {
+    if (!auth || !auth.currentUser) {
+      const mockAuth = new MockAuthService();
+      return mockAuth.changePassword(newPassword);
+    }
+    const { updatePassword } = await import('firebase/auth');
+    await updatePassword(auth.currentUser, newPassword);
   }
 }
 

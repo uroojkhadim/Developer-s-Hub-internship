@@ -9,8 +9,15 @@ interface ProtectedRouteProps {
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { user, isLoading } = useAuth();
-  const router = useRouter();
+  const router = useRouter(); // eslint-disable-line @typescript-eslint/no-unused-vars
 
+  // Only redirect if we're not loading AND there's no user
+  if (!isLoading && !user) {
+    // Redirect to login if not authenticated
+    return <Redirect href="../auth/login" />;
+  }
+
+  // Show loading indicator while checking authentication status
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -18,11 +25,6 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
         <Text style={styles.loadingText}>Loading...</Text>
       </View>
     );
-  }
-
-  if (!user) {
-    // Redirect to login if not authenticated
-    return <Redirect href="../auth/login" />;
   }
 
   // User is authenticated, render children
