@@ -28,8 +28,9 @@ export const unstable_settings = {
   anchor: '(tabs)',
 };
 
-const AppContent = () => {
+export default function RootLayout() {
   const [isReady, setIsReady] = useState(false);
+  const colorScheme = useColorScheme();
 
   useEffect(() => {
     let responseListener: Notifications.Subscription;
@@ -78,12 +79,6 @@ const AppContent = () => {
     return null; // Or a loading indicator
   }
 
-  return null;
-};
-
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
-
   return (
     <AuthProvider>
       <PostProvider>
@@ -97,7 +92,6 @@ export default function RootLayout() {
               <Stack.Screen name="auth/signup" options={{ headerShown: false }} />
               <Stack.Screen name="auth/forgot-password" options={{ headerShown: false }} />
             </Stack>
-            <AppContent />
             <StatusBar style="auto" />
           </ThemeProvider>
         </NotificationProvider>

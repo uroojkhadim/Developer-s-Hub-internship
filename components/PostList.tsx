@@ -1,68 +1,51 @@
 import * as ImagePicker from 'expo-image-picker';
-import React, { useEffect, useState, useCallback } from 'react';
-import { Alert, FlatList, Modal, RefreshControl, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Alert, FlatList, Modal, RefreshControl, StyleSheet, Text, TextInput, TouchableOpacity, View, Image } from 'react-native';
 import { Post as PostType } from '../types/post';
 import Post from './Post';
 import CreatePost from './CreatePost';
-import { getPosts, likePost, updatePost as updatePostService, deletePost as deletePostService } from '../services/postService';
+import { likePost, updatePost as updatePostService, deletePost as deletePostService } from '../services/postService';
 import { useAuth } from '../contexts/AuthContext';
 import { usePosts } from '../contexts/PostContext';
 
 const PostList = () => {
-  const [posts, setPosts] = useState<PostType[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const { user } = useAuth();
-  const { refreshPosts } = usePosts();
+  const { posts, loading, refreshPosts } = usePosts();
+
+  const stories = [
+    { id: 'me', label: 'Your Story', isOwn: true },
+    { id: 'sarah', label: 'Sarah' },
+    { id: 'alex', label: 'Alex' },
+    { id: 'jordan', label: 'Jordan' },
+    { id: 'ella', label: 'Ella' },
+  ];
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [editingPost, setEditingPost] = useState<PostType | null>(null);
   const [editContent, setEditContent] = useState('');
   const [editImageUri, setEditImageUri] = useState<string | null>(null);
 
-  const handlePostCreated = () => {
-    loadPosts(true);
+  const handlePostCreated = async () => {
+    await refreshPosts();
   };
 
-  const loadPosts = useCallback(async (refresh = false) => {
-    if ((isLoading || isRefreshing) && !refresh) return;
-    
-    if (refresh) {
-      setIsRefreshing(true);
-    } else {
-      setIsLoading(true);
-    }
-    
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
     try {
-      const fetchedPosts = await getPosts();
-      setPosts(fetchedPosts);
-    } catch (error) {
-      console.error('Error loading posts:', error);
+      await refreshPosts();
     } finally {
-      setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, [isLoading, isRefreshing]);
+  };
 
   const handleLike = async (postId: string) => {
     if (!user) return;
     
     try {
       await likePost(postId, user.id);
-      setPosts(prevPosts => 
-        prevPosts.map(post => {
-          if (post.id === postId) {
-            const isLiked = post.likes.includes(user.id);
-            return {
-              ...post,
-              likes: isLiked 
-                ? post.likes.filter(id => id !== user.id)
-                : [...post.likes, user.id]
-            };
-          }
-          return post;
-        })
-      );
+      await refreshPosts();
     } catch (error) {
       console.error('Error liking post:', error);
+      Alert.alert('Error', 'Failed to like post');
     }
   };
 
@@ -97,6 +80,7 @@ const PostList = () => {
     try {
       await updatePostService(editingPost.id, { content: editContent, imageUrl: editImageUri || '' });
       setEditingPost(null);
+      await refreshPosts();
     } catch (error) {
       console.error('Error updating post:', error);
       Alert.alert('Error', 'Could not update post');
@@ -112,6 +96,7 @@ const PostList = () => {
         onPress: async () => {
           try {
             await deletePostService(postId);
+            await refreshPosts();
           } catch (error) {
             console.error('Error deleting post:', error);
             Alert.alert('Error', 'Could not delete post');
@@ -121,16 +106,29 @@ const PostList = () => {
     ]);
   };
 
-  useEffect(() => {
-    loadPosts();
-  }, [loadPosts]);
-
   return (
     <View style={styles.container}>
       <FlatList
         data={posts}
         keyExtractor={item => item.id}
-        ListHeaderComponent={<CreatePost onPostCreated={handlePostCreated} />}
+        ListHeaderComponent={
+          <View>
+            {/* Stories row */}
+            <View style={styles.storiesRow}>
+              {stories.map(story => (
+                <View key={story.id} style={styles.storyItem}>
+                  <View style={[styles.storyBubble, story.isOwn && styles.storyBubbleOwn]}>
+                    {story.isOwn && <View style={styles.storyPlus} />}
+                  </View>
+                  <Text style={styles.storyLabel} numberOfLines={1}>
+                    {story.label}
+                  </Text>
+                </View>
+              ))}
+            </View>
+            <CreatePost onPostCreated={handlePostCreated} />
+          </View>
+        }
         renderItem={({ item }) => (
           <Post 
             post={item} 
@@ -143,17 +141,22 @@ const PostList = () => {
         )}
         refreshControl={
           <RefreshControl
-            refreshing={isRefreshing}
-            onRefresh={() => loadPosts(true)}
+            refreshing={isRefreshing || loading}
+            onRefresh={handleRefresh}
             colors={['#007AFF']}
             tintColor="#007AFF"
           />
         }
-        onEndReached={() => !isLoading && loadPosts()}
-        onEndReachedThreshold={0.5}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No posts yet. Be the first to post!</Text>
+            <Text style={styles.emptyText}>
+              {loading ? 'Loading posts...' : 'No posts yet. Be the first to post!'}
+            </Text>
+            {!loading && posts.length === 0 && (
+              <Text style={styles.emptySubtext}>
+                Pull down to refresh or create a new post above
+              </Text>
+            )}
           </View>
         }
       />
@@ -190,17 +193,62 @@ const PostList = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#F3F5FA',
+  },
+  storiesRow: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    gap: 16,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  storyItem: {
+    alignItems: 'center',
+    width: 68,
+  },
+  storyBubble: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    borderWidth: 3,
+    borderColor: '#0EA5E9',
+    backgroundColor: '#FFE4D6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  storyBubbleOwn: {
+    backgroundColor: '#FFE4D6',
+  },
+  storyPlus: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#0EA5E9',
+  },
+  storyLabel: {
+    marginTop: 6,
+    fontSize: 11,
+    color: '#6B7280',
+  },
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: 40,
+    minHeight: 200,
   },
   emptyText: {
     fontSize: 16,
     color: '#666',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: '#999',
     textAlign: 'center',
   },
   modalBackdrop: {

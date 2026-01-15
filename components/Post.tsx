@@ -76,7 +76,7 @@ const Post: React.FC<PostProps> = ({ post, onLike, onComment, onEdit, onDelete, 
           <MaterialIcons 
             name={isLiked ? 'favorite' : 'favorite-border'} 
             size={24} 
-            color={isLiked ? '#ff4444' : '#666'} 
+            color={isLiked ? '#0EA5E9' : '#9CA3AF'} 
           />
           <Text style={[styles.actionText, isLiked && styles.likedText]}>
             {likeCount > 0 ? likeCount : ''}
@@ -87,14 +87,14 @@ const Post: React.FC<PostProps> = ({ post, onLike, onComment, onEdit, onDelete, 
           style={styles.actionButton}
           onPress={() => onComment(post.id)}
         >
-          <MaterialIcons name="chat-bubble-outline" size={24} color="#666" />
+          <MaterialIcons name="chat-bubble-outline" size={24} color="#9CA3AF" />
           <Text style={styles.actionText}>
             {commentCount > 0 ? commentCount : ''}
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.actionButton}>
-          <MaterialCommunityIcons name="share-outline" size={24} color="#666" />
+          <MaterialCommunityIcons name="share-outline" size={24} color="#9CA3AF" />
           <Text style={styles.actionText}></Text>
         </TouchableOpacity>
       </View>
@@ -104,15 +104,16 @@ const Post: React.FC<PostProps> = ({ post, onLike, onComment, onEdit, onDelete, 
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    marginBottom: 12,
-    padding: 15,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    marginHorizontal: 16,
+    marginBottom: 18,
+    padding: 14,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 4,
   },
   header: {
     flexDirection: 'row',
@@ -124,9 +125,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     marginRight: 10,
   },
   avatarPlaceholder: {
@@ -135,7 +136,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   userName: {
-    fontWeight: '600',
+    fontWeight: '700',
     fontSize: 15,
   },
   timestamp: {
@@ -144,12 +145,13 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   contentContainer: {
-    marginBottom: 12,
+    marginBottom: 10,
   },
   content: {
     fontSize: 15,
-    lineHeight: 20,
+    lineHeight: 22,
     marginBottom: 10,
+    color: '#111827',
   },
   ownerActions: {
     flexDirection: 'row',
@@ -160,9 +162,9 @@ const styles = StyleSheet.create({
   },
   postImage: {
     width: '100%',
-    height: 300,
-    borderRadius: 8,
-    marginTop: 10,
+    height: 260,
+    borderRadius: 20,
+    marginTop: 4,
   },
   footer: {
     flexDirection: 'row',

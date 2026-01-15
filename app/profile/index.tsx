@@ -45,13 +45,35 @@ export default function ProfileScreen() {
   }
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.container} 
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Your Profile</Text>
+        <View style={styles.hero}>
+          <View style={styles.avatarRing}>
+            <ProfilePictureUpload
+              currentAvatar={user.avatar || ''}
+              onImageChange={() => {}}
+            />
+          </View>
+          <Text style={styles.name}>{user.name || 'Creator'}</Text>
+          {user.bio ? <Text style={styles.bio}>{user.bio}</Text> : null}
+
+          <View style={styles.statsRow}>
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>128</Text>
+              <Text style={styles.statLabel}>Posts</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>1.2k</Text>
+              <Text style={styles.statLabel}>Followers</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>850</Text>
+              <Text style={styles.statLabel}>Following</Text>
+            </View>
+          </View>
         </View>
 
         <Formik
@@ -65,10 +87,6 @@ export default function ProfileScreen() {
         >
           {({ handleChange, handleBlur, handleSubmit, values, errors, touched, setFieldValue }) => (
             <>
-              <ProfilePictureUpload 
-                currentAvatar={values.avatar} 
-                onImageChange={(uri) => setFieldValue('avatar', uri)} 
-              />
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>Name</Text>
                 <TextInput
@@ -101,18 +119,18 @@ export default function ProfileScreen() {
                 )}
               </View>
 
-              <TouchableOpacity 
-                style={styles.button} 
+              <TouchableOpacity
+                style={styles.primaryButton}
                 onPress={handleSubmit as any}
               >
-                <Text style={styles.buttonText}>Update Profile</Text>
+                <Text style={styles.primaryButtonText}>Edit Profile</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity 
-                style={[styles.button, styles.logoutButton]} 
+              <TouchableOpacity
+                style={styles.logoutButton}
                 onPress={handleLogout}
               >
-                <Text style={styles.buttonText}>Logout</Text>
+                <Text style={styles.logoutText}>Logout</Text>
               </TouchableOpacity>
             </>
           )}
@@ -127,19 +145,54 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#F3F5FA',
   },
   scrollContent: {
-    padding: 20,
+    paddingBottom: 32,
   },
-  header: {
+  hero: {
     alignItems: 'center',
-    marginBottom: 30,
+    paddingTop: 32,
+    paddingBottom: 24,
+    backgroundColor: '#FFFFFF',
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+    marginBottom: 20,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
+  avatarRing: {
+    marginBottom: 12,
+  },
+  name: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#111827',
+  },
+  bio: {
+    fontSize: 13,
+    color: '#6B7280',
+    textAlign: 'center',
+    marginTop: 4,
+    paddingHorizontal: 32,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 20,
+    width: '100%',
+  },
+  statItem: {
+    alignItems: 'center',
+  },
+  statValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111827',
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#6B7280',
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
   },
   profileSection: {
     alignItems: 'center',
@@ -191,10 +244,10 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ddd',
-    padding: 15,
-    borderRadius: 8,
-    backgroundColor: '#fff',
+    borderColor: '#E5E7EB',
+    padding: 14,
+    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
     fontSize: 16,
   },
   textArea: {
@@ -207,18 +260,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   button: {
-    backgroundColor: '#3498db',
-    padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
     marginTop: 10,
   },
-  logoutButton: {
-    backgroundColor: '#e74c3c',
+  primaryButton: {
+    backgroundColor: '#0EA5E9',
+    paddingVertical: 14,
+    borderRadius: 999,
+    alignItems: 'center',
+    marginTop: 10,
+    marginHorizontal: 20,
   },
-  buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
+  primaryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  logoutButton: {
+    marginTop: 12,
+    alignItems: 'center',
+  },
+  logoutText: {
+    color: '#EF4444',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
